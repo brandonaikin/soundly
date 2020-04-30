@@ -1,0 +1,87 @@
+body{
+  height:1024px;
+  background-image: linear-gradient(#AA0000, #330000);
+	
+  font: 14px "Open Sans", "Lucida Grande", "Arial", sans-serif;
+}
+
+
+.track-step{
+	width:40px;
+	height:40px;
+	display:inline-block;
+	background-image:linear-gradient(#330000, #990000);
+	margin-left:5px;
+  border:solid 2px orange;
+  border-radius:6px;
+}
+div.grid.row {
+  margin-top:5px;
+}
+div#container {
+  width:100%;
+  height:100%;
+  padding-top:80px;
+}
+div.app-grid {
+  margin: auto;
+    width: 80%;
+}
+
+div.controls {
+  background: black;
+  color: white;
+  padding:20px;
+  margin-left:30%;
+  margin-top:30px;
+    width: 1024px;
+}
+input, button, select, option, div#tempoBox {
+  background: black;
+  color: white;
+  border-radius:6px;
+}
+input, button, label, div#tempoBox{
+  line-height:20px;
+  font-size:16px;
+  margin-bottom:5px;
+}
+div.grid-item.track-step.selected {
+  background-image:linear-gradient(orange, #333);
+}
+
+.track-volume-knob{
+  line-height:26px;
+}
+.global-effect-knob{
+  margin-left:10px;
+}
+div.heading h1, div.heading h2{
+  font-weight:bold;
+  margin-left:120px;
+  /*
+  color: transparent;
+  background: white;
+  -webkit-background-clip: text;
+  -moz-background-clip: text;
+  background-clip: text;
+  text-shadow: 0px 3px 3px rgba(255,255,255,0.5);
+  */
+  color: #000;
+  text-shadow: #e0e0e0 1px 1px 0;
+  
+  color: #FFFFFF;
+  text-shadow: 2px 2px 0 orange, 2px -2px 0 orange, -2px 2px 0 orange, -2px -2px 0 orange, 2px 0px 0 orange, 0px 2px 0 orange, -2px 0px 0 orange, 0px -2px 0 orange;
+}
+div.grid.row {
+  /*border-bottom: 1px solid white;*/
+}
+div.grid.row select {
+  position:relative;
+  float:left;
+  clear:both;
+  top:41px;
+  margin-left:-40px;
+  width:40px;
+  
+}

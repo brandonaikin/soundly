@@ -1,0 +1,30 @@
+CRITICAL - 2020-04-24 10:19:28 --> json_decode() expects parameter 1 to be string, object given
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'json_decode() e...', '/var/www/docroo...', 11, Array)
+#1 /var/www/docroot/api/app/Controllers/Home.php(11): json_decode(Object(stdClass))
+#2 /var/www/docroot/api/system/CodeIgniter.php(910): App\Controllers\Home->index()
+#3 /var/www/docroot/api/system/CodeIgniter.php(398): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+#4 /var/www/docroot/api/system/CodeIgniter.php(306): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#5 /var/www/docroot/public/index.php(45): CodeIgniter\CodeIgniter->run()
+#6 {main}
+CRITICAL - 2020-04-24 10:21:24 --> json_decode() expects parameter 1 to be string, object given
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'json_decode() e...', '/var/www/docroo...', 11, Array)
+#1 /var/www/docroot/api/app/Controllers/Home.php(11): json_decode(Object(stdClass))
+#2 /var/www/docroot/api/system/CodeIgniter.php(910): App\Controllers\Home->index()
+#3 /var/www/docroot/api/system/CodeIgniter.php(398): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+#4 /var/www/docroot/api/system/CodeIgniter.php(306): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#5 /var/www/docroot/public/index.php(45): CodeIgniter\CodeIgniter->run()
+#6 {main}
+CRITICAL - 2020-04-24 10:27:53 --> json_decode() expects parameter 1 to be string, object given
+#0 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler(2, 'json_decode() e...', '/var/www/docroo...', 11, Array)
+#1 /var/www/docroot/api/app/Controllers/Home.php(11): json_decode(Object(stdClass))
+#2 /var/www/docroot/api/system/CodeIgniter.php(910): App\Controllers\Home->index()
+#3 /var/www/docroot/api/system/CodeIgniter.php(398): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+#4 /var/www/docroot/api/system/CodeIgniter.php(306): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#5 /var/www/docroot/public/index.php(45): CodeIgniter\CodeIgniter->run()
+#6 {main}
+CRITICAL - 2020-04-24 10:31:45 --> Cannot use object of type stdClass as array
+#0 /var/www/docroot/api/system/CodeIgniter.php(910): App\Controllers\Home->index()
+#1 /var/www/docroot/api/system/CodeIgniter.php(398): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Home))
+#2 /var/www/docroot/api/system/CodeIgniter.php(306): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#3 /var/www/docroot/public/index.php(45): CodeIgniter\CodeIgniter->run()
+#4 {main}
