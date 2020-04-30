@@ -21,7 +21,7 @@ class App extends BaseConfig
 	| environments.
 	|
 	*/
-	public $baseURL = 'https://soundly.docksal/';
+	public $baseURL = 'http://soundly.docksal/public/';
 
 	/*
 	|--------------------------------------------------------------------------

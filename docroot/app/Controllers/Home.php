@@ -39,6 +39,7 @@ class Home extends BaseController {
     
 	}
 
+  
   public function patterns() {
     $id   = $this->request->getVar('id');
     $file = dirname($_SERVER["SCRIPT_FILENAME"]);
@@ -47,7 +48,6 @@ class Home extends BaseController {
     $json = json_encode($data);
 		return $this->response->setJSON($json);
   }
-  
   public function sequencer() {
     $id   = $this->request->getVar('id');
     $file = dirname($_SERVER["SCRIPT_FILENAME"]);

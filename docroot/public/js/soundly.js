@@ -50,5 +50,5 @@
         return;
       }
       
-      sequencer.save("http://sound.docksal/public/", title);
+      sequencer.save("http://soundly.docksal/public/", title);
     }
