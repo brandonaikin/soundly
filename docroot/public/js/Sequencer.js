@@ -1,3 +1,5 @@
+
+const urlParams = new URLSearchParams(window.location.search);
 class Sequencer {
   #tempo;
   constructor(){
@@ -7,9 +9,10 @@ class Sequencer {
     this.audioContext     = null;
     this.currentPattern   = null;
     this.eventDispatcher  = new EventTarget();
-    this.synth = null;
-    this.beatClock       = new BeatClock();
-    Sequencer.this        = this;
+    this.beatClock        = new BeatClock();
+    this.synth     = null;
+    this.userId    = urlParams.get("id");
+    Sequencer.this = this;
   }
   
   initialize() {
@@ -18,11 +21,12 @@ class Sequencer {
     this.eventDispatcher.dispatchEvent(new Event("initialized"));
   }
   
-  loadPatterns(url){
+  loadPatterns(){
     let params = {
       method:"POST"
     };
     let self = this;
+    let url = "/public/home/patterns?id=" + self.userId;
     return fetch(url, params)
        .then((response) => response.json())
        .then((result) => {
@@ -45,6 +49,7 @@ class Sequencer {
   getCurrentPattern(){
     return this.currentPattern;
   }
+  
   setTempo(t) {
     this.beatClock.tempo = t;
     if(this.currentPattern === null) {
@@ -56,11 +61,31 @@ class Sequencer {
       detail: { tempo: this.beatClock.tempo }
     });
     this.eventDispatcher.dispatchEvent(evt);
+    if(this.audioContext !== null) {
+      this.stop();
+      this.play();
+    }
+    
   }
   
   get tempo() {
     return this.beatClock.tempo;
   }
+  
+  findSounds() (
+    let params = {
+      method:"POST"
+    };
+    let self = this;
+    let url = "/public/home/sounds?id=" + self.userId;
+    return fetch(url, params)
+       .then((response) => response.json())
+       .then((result) => {
+         self.createPatterns(result);
+         self.eventDispatcher.dispatchEvent(new Event("soundUrlsLoaded"));
+    });
+  )
+  
   
   addSound(file, name) {
     this.sounds.push({"url":file, "name":name});
@@ -99,6 +124,9 @@ class Sequencer {
   play() {
     this.beatClock.addEventListener("tick", this.onClockTick);
     let self = Sequencer.this;
+    if(self.synth !== null && typeof self.synth !== "undefined"){
+      self.synth.mute();
+    }
     self.playing = !self.playing;
     if(!self.playing){
       self.stop();
@@ -115,25 +143,21 @@ class Sequencer {
   
   onClockTick(evt) {
     let self = Sequencer.this;
-    self.playTick();
-  }
-  
-  playTick() {
-    let self = Sequencer.this;
-    let step = self.beatClock.step +1;
-    self.beatClock.step = step;
+    let step = self.beatClock.step;
     self.playSounds();
-    
-    self.beatClock.futureTickTime += self.counterTimeValue;
+    self.beatClock.step = step+1;
     if (self.beatClock.step > 15) {
         self.beatClock.step = 0;
     }
   }
-
+  
   findPattern(title) {
     for(let i = 0; i < this.patterns.length; i++) {
       if(this.patterns[i].title.toLowerCase() == title.toLowerCase()) {
         this.currentPattern = this.patterns[i];
+        if(self.synth !== null && typeof self.synth !== "undefined"){
+          self.synth.mute();
+        }
         return this.currentPattern;
       }
     }
@@ -161,20 +185,21 @@ class Sequencer {
     }
   }
   
-  save(url, title) {
+  save(title) {
     if(this.currentPattern !== null) {
       this.currentPattern.title = title;
-      url += "?id=49er&title=" + title;
+      let url = "/public/home?id=" + this.userId +"&title=" + title;
       let data = JSON.stringify(this.currentPattern);
       let params = {
         method:"POST",
         body:data,
         contentType:"application/json"
       };
-      
+      const self = this;
       return fetch(url, params)
           .then((response) => response.json())
           .then((result) => {
+            self.eventDispatcher.dispatchEvent(new Event("patternSaved"));
             console.log('Success:', result);
        });
     }
@@ -216,14 +241,18 @@ class Sequencer {
   }
   
   setVolumeForTrack(trackIndex, volume) {
+    
     if (this.sounds[trackIndex] && this.sounds[trackIndex].sound) {
       let audio = this.sounds[trackIndex].sound;
       volume *=  0.01;
       audio.setVolume(volume);
     }
+    // TODO
     else if (parseInt(trackIndex) === 4){
+      volume *=  0.1;
       this.synth.setVolume(volume);
     }
+    this.currentPattern.setTrackVolume(trackIndex, volume);
   }
   
   setGlobalFrequency(knob, value) {
@@ -231,7 +260,9 @@ class Sequencer {
       soundObj.sound.setFilterFrequency(value);
     });
     Sequencer.this.currentPattern.filterFrequency = value;
-    Sequencer.this.synth.setFilterFrequency(value);
+    if(Sequencer.this.synth !== null){
+      Sequencer.this.synth.setFilterFrequency(value);
+    }
   }
   
   setGlobalFilterType(value) {
@@ -239,7 +270,10 @@ class Sequencer {
       soundObj.sound.setFilterType(value.toLowerCase());
     });
     Sequencer.this.currentPattern.filterType = value.toLowerCase();
-    Sequencer.this.synth.setFilterType(value);
+    if(Sequencer.this.synth !== null){
+      Sequencer.this.synth.setFilterType(value);
+    }
+    
   }
   
   setGlobalResonance(knob, value) {
@@ -247,18 +281,24 @@ class Sequencer {
       soundObj.sound.setFilterResonance(value);
     });
     Sequencer.this.currentPattern.resonance = value;
-    Sequencer.this.synth.setResonance(value);
+    if(Sequencer.this.synth !== null && typeof Sequencer.this.synth !== "undefined"){
+      Sequencer.this.synth.setResonance(value);
+    }
   }
   
   setGlobalDistortion(knob, value) {
     Sequencer.this.sounds.forEach(function(soundObj){
       soundObj.sound.setDistortionLevel(value);
     });
-    Sequencer.this.currentPattern.distortion = value;
+    if(Sequencer.this.synth !== null){
+      Sequencer.this.currentPattern.distortion = value;
+    }
   }
   
   setSynthVolume(knob, value) {
-    Sequencer.this.synth.setVolume(value);
+    if(Sequencer.this.synth !== null){
+      Sequencer.this.synth.setVolume(value);
+    }
   }
   
   addEventListener(type, listener){
@@ -281,8 +321,9 @@ class Sequencer {
     this.beatClock.stop();
     this.beatClock.removeEventListener("tick", this.onClockTick);
     this.playing = false;
-    this.synth.mute();
-   // window.clearInterval(this.timerId);
+    if(this.synth !== null) {
+      this.synth.mute();
+    }
   }
   
 }

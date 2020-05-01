@@ -1,6 +1,6 @@
 <?php namespace App\Controllers;
-ini_set('display_errors', 1);
-class Home extends BaseController {
+//ini_set('display_errors', 1);
+class Home extends SoundlyBaseController {
   
 	public function index(){
     $id      = $this->request->getVar('id');
@@ -60,49 +60,35 @@ class Home extends BaseController {
   public function synth() {
     return view("synth");
   }
-  
-  private function _getFilesJsonArray($path) {
-    $data = array();
-    if(is_dir($path)) {
-      $files = $this->_findFiles($path);
-      foreach($files as $file) {
-        $pattern = explode(".", $file)[0];
-        $filepath = "$path/$file";
-        if(!is_file($filepath)) {
-          
-          continue;
-        }
-        $contents = file_get_contents($filepath);
-        if(is_string($contents)){
-          $value = json_decode($contents, true);
-          if (empty($value["title"])) continue;
-          if (empty($value["pattern"])) {
-            $value["pattern"] = uniqid();
-          }
-          $data[]= $value;
-        }
-      }
-    }
-    return $data;
-  }
-  
-  private function _writeFile($path, $data, $pattern) {
-     if(!is_dir($path)) {
-       mkdir($path);
-     }
-     $filepath = "$path/{$pattern}.json";
-     return file_put_contents ($filepath, $data);
-  }
-  
-  private function _findFiles($path) {
-    $list = array();
-    if ($handle = opendir($path)) {
-        while (false !== ($entry = readdir($handle))) {
-            $list[]= $entry;
-        }
-    closedir($handle);
-    }
-    return $list;
-  }
 
+  public function sounds() {
+		$id = $this->request->getVar('id');
+		if(empty($id)){
+			return redirect()->to("/public/login");
+		}
+		$file    = dirname($_SERVER["SCRIPT_FILENAME"]);
+		$path    = str_replace("public", "writable", $file);
+		$path .= "/uploads/soundly/$id/samples/";
+		$data = $this->_findFiles($path);
+		$count = count($data);
+		$replacements = array();
+		for($i = 0; $i < $count; $i++){
+			$item = $data[$i];
+			if(is_array($item)){
+				//echo "item is array. \n";
+				$replacements = [$i => $item[0]];
+			}
+			elseif(is_string($item) && strlen($item) < 4) {
+				//echo "item is string. \n";
+				$replacements = [$i => $data[$i]];
+			}
+		}
+		//print_r($replacements);
+		//echo "\n";
+		//$data = array_replace($data,$replacements);
+		//print_r($data);
+		//echo "\n";
+		$json = json_encode($data);
+		return $this->response->setJSON($json);
+	}
 }

@@ -1,11 +1,11 @@
 
     const sequencer  = new Sequencer();
     const uiBridge   = new SoundlyUIBridge(sequencer);
-    const playButton = document.querySelector(".play-stop-button");
-    const saveButton = document.querySelector(".save-button");
-    const newPattern = document.querySelector(".new-pattern-button");
+    //const playButton = document.querySelector(".play-stop-button");
+    //const saveButton = document.querySelector(".save-button");
+    //const newPattern = document.querySelector(".new-pattern-button");
     sequencer.addEventListener("initialized", onInit);
-    saveButton.addEventListener("click", save);
+    //saveButton.addEventListener("click", save);
     sequencer.initialize();
     let paused = true;
     
@@ -20,12 +20,14 @@
     }
     
     function onSoundsLoaded(){
-      sequencer.loadPatterns("/public/home/patterns?id=49er");
+      sequencer.loadPatterns();
     }
 
     function onSequencesLoaded(evt) {
+      /*
       playButton.addEventListener("click",playPause );
       playButton.innerText = "\u25B6";
+      */
       uiBridge.buildPatternSelect();
       let freq = 5000;
       if(uiBridge.currentPattern.filterFrequency) {
@@ -35,13 +37,13 @@
       uiBridge.addSynthTrack();
     }
     
+/*
     function playPause() {
       paused = !paused;
       let label = paused ? "\u25B6" : "\u23F5" ;
       playButton.innerText = label;
       sequencer.play();
     }
-
     function save(evt) {
       evt.preventDefault();
       let title = document.getElementById("saveInput").value;
@@ -50,5 +52,7 @@
         return;
       }
       
-      sequencer.save("http://soundly.docksal/public/", title);
+      sequencer.save( title);
     }
+*/
+

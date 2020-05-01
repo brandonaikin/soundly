@@ -4,19 +4,33 @@ class SoundlyUIBridge {
     this.sequencer = sequencer;
     this.sequencer.addEventListener("tempoChange", this.onSequencerTempoChange);
     SoundlyUIBridge.this = this;
-    
+    this.volumeKnobs = [];
+    this.playButton = document.querySelector(".play-stop-button");
+    this.saveButton = document.querySelector("button.save-button"); 
+    this.saveForm = document.querySelector("form#saveForm");
+    this.paused = true;
     document.querySelector("#filterTypeSelect").addEventListener("change", this.onFilterTypeChange);
     this.initialize();
   }
   
   initialize() {
     let p = this.sequencer.createEmptyPattern();
-    this.loadSequence(p.sequence);
+    this.frequencyKnob  = this.addFrequencyKnob();
+    this.distortionKnob = this.addDistortionKnob();
+    this.resonanceKnob  = this.addResonanceKnob();
+    this.loadSequence(p);
     document.getElementById("saveInput").value = "Untitled";
     document.querySelector("#tempo").addEventListener("change", this.onUITempoChange);
-    this.addFrequencyKnob();
-    this.addDistortionKnob();
-    this.addResonanceKnob();
+    this.playButton.innerText = "\u25B6";
+    this.playButton.addEventListener("click",function(evt){
+      SoundlyUIBridge.this.playPause();
+    } );
+    this.saveForm.addEventListener("submit", this.save);
+    this.sequencer.addEventListener("soundsLoaded", this.onSoundsLoaded);
+    this.sequencer.loadSounds();
+  }
+  
+  onSoundsLoaded(evt) {
     
   }
   
@@ -45,15 +59,7 @@ class SoundlyUIBridge {
       o.appendChild(t);
       select.appendChild(o);
     }
-    const newPattern  = document.querySelector(".new-pattern-button");
-    newPattern.style.display = "inline-flex";
-    newPattern.addEventListener("click", function(evt){
-      let p = sequencer.createEmptyPattern();
-      SoundlyUIBridge.this.loadSequence(p.sequence);
-      document.getElementById("saveInput").value = "Untitled";
-    });
     select.addEventListener("change", this.changePattern);
-    
   }
   
   changePattern(evt) {
@@ -65,21 +71,56 @@ class SoundlyUIBridge {
     let pattern = sequencer.findPattern(evt.target.value);
     let data = pattern.sequence;
     document.getElementById("saveInput").value = pattern.title;
-    //sequencer.stop();
-    SoundlyUIBridge.this.loadSequence(data);
+    SoundlyUIBridge.this.loadSequence(pattern);
+    
+    SoundlyUIBridge.this.playPause();
   }
   
-  loadSequence(data) {
-    document.querySelector(".app-grid").innerHTML = "";
-    for(var i = 0; i < data.length; i++) {
-      let track = this.buildTrack(i + 1);
-      for (var j = 0; j < data[i].length; j++) {
-        let cell = data[i][j];
-        let tile = this.buildTile(track, (j + 1), cell > 0);
+  loadSequence(p) {
+    let data = p.sequence;
+    this.loadTracks(data);
+    let select = document.getElementById("filterTypeSelect");
+    let options = select.options;
+    let filter = this.sequencer.getCurrentPattern().filterType;
+    for (var i = 0; i < options.length; i++) {
+      let option = options.item(i);
+      let value  = option.value.toLowerCase();
+      if (filter.toLowerCase() === value) {
+        select.selectedIndex = i; 
       }
     }
-    let t = this.sequencer.getCurrentPattern().tempo || this.sequencer.tempo;
+    let t   = p.tempo || this.sequencer.tempo;
+    let distortion = p.distortion;
+    let freq = p.filterFrequency;
+    this.sequencer.setTempo(t);
+    this.frequencyKnob.setValue(freq);
+    this.distortionKnob.setValue(distortion);
+    this.sequencer.setGlobalFrequency(null,freq);
+    this.sequencer.setGlobalFilterType(filter);
+    this.sequencer.setGlobalDistortion(null, distortion);
     this.updateTempoLabel(t + " ");
+  }
+  
+  loadTracks(data) {
+    document.querySelector(".app-grid").innerHTML = "";
+    let mix = this.sequencer.getCurrentPattern().trackMix;
+    if(typeof mix === "undefined") {
+      mix = [0.5,0.5,0.5,0.5];
+    }
+    for(var i = 0; i < data.length; i++) {
+      let vol  = 50; 
+      if(!isNaN(mix[i])) {
+        vol = Math.floor(parseFloat(mix[i]) * 100); 
+      }
+      
+      let track = this.buildTrack(i + 1, vol);
+      for (var j = 0; j < data[i].length; j++) {
+        let cell = data[i][j];
+        let tile = this.buildTile(track, (j + 1), cell);
+      }
+      
+      this.sequencer.setVolumeForTrack(i, vol);
+    }
   }
   
   addSynthTrack() {
@@ -129,18 +170,19 @@ class SoundlyUIBridge {
     this.sequencer.addTrackToPattern(track);
   }
   
-  buildTrack(trackNumber) {
+  buildTrack(trackNumber, volume = 50) {
     let trackDiv  = document.createElement("div");
     let trackCss  = "grid row track-" + trackNumber + "-container";
     let gridDiv   = document.querySelector(".app-grid");
     trackDiv.setAttribute("data-track-index", trackNumber - 1);
     trackDiv.setAttribute("class", trackCss);
     gridDiv.appendChild(trackDiv);
-    this.addTrackVolumeKnob(trackDiv);
+    this.addTrackVolumeKnob(trackDiv, volume);
     return trackDiv;
   }
   
-  buildTile(trackDiv, col, selected) {
+  buildTile(trackDiv, col, cell) {
+    let selected = cell > 0;
     let tileDiv  = document.createElement("div");
     let css = "grid-item track-step step-" + col;
     tileDiv.setAttribute("class", css);
@@ -158,33 +200,41 @@ class SoundlyUIBridge {
     return tileDiv;
   }
   
-  addTrackVolumeKnob(track) {
+  addTrackVolumeKnob(track, initVal = 50) {
     let knob = pureknob.createKnob(40, 40);
     let knobNode = knob.node();
-    knob.setValue(50);
+    knob.setValue(initVal);
     knobNode.classList.add("track-volume-knob");
     track.appendChild(knobNode);
     knobNode.setAttribute("data-track-index", track.dataset.trackIndex);
+    knobNode.id = "volumeKnob" + track.dataset.trackIndex;
     knob.addListener(this.onTrackVolumeKnobChange);
+    
+    return knob;
   }
 
   addFrequencyKnob() {
     let knob = this.createEffectKnob(50, 5000, "Frequency", 5000);
     knob.addListener(this.sequencer.setGlobalFrequency);
+    return knob;
   }
   
   addDistortionKnob() {
     let knob = this.createEffectKnob(0, 50, "Distortion");
     knob.addListener(this.sequencer.setGlobalDistortion);
+    return knob;
   }
+  
   addResonanceKnob() {
     let knob = this.createEffectKnob(0, 75, "Resonance");
     knob.addListener(this.sequencer.setGlobalResonance);
+    return knob;
   }
 
   addReverbKnob() {
     let knob = this.createEffectKnob(0, 50, "Reverb");
-    knob.addListener(this.sequencer.setGlobalResonance);
+    knob.addListener(this.sequencer.setGlobalReverb);
+    return knob;
   }
   
   createEffectKnob(min, max, label = "", initial = null) {
@@ -254,8 +304,51 @@ class SoundlyUIBridge {
     SoundlyUIBridge.this.sequencer.updateCurrentPattern(t, b, value);
   }
   
-  frequencyKnobChange(knob, value){
+  playPause() {
+    this.paused = !this.paused;
+    let label = this.paused ? "\u25B6" : "\u23F5" ;
+    this.playButton.innerText = label;
+    if(this.paused) {
+      this.sequencer.stop();
+    }
+    else {
+      this.sequencer.play();
+    }
   }
   
+  save(evt) {
+    evt.preventDefault();
+    let self = SoundlyUIBridge.this;
+    let titleInput = document.getElementById("saveInput");
+    titleInput.classList.remove("hidden");
+    self.saveButton.innerText = "Confirm";
+    self.saveButton.removeEventListener("click", self.save);
+    self.saveButton.addEventListener("click", self.confirmSave);
+  }
+  
+  confirmSave(evt) {
+    evt.preventDefault();
+    let self = SoundlyUIBridge.this;
+    let titleInput = document.getElementById("saveInput");
+    let title = titleInput.value;
+    titleInput.classList.remove("hidden");
+    if(title === null || typeof title === "undefined" || title.length < 1) {
+      console.log("title is null or undefined.");
+      return;
+    }
+    titleInput.classList.add("hidden");
+    self.saveButton.disabled = true;
+    self.sequencer.addEventListener("patternSaved", self.onPatternSaved);
+    self.sequencer.save(title);
+  }
+  
+  onPatternSaved(evt) {
+    let self = SoundlyUIBridge.this;
+    self.saveButton.disabled = false;
+    self.saveButton.innerText = "Save";
+    self.saveButton.addEventListener("click", self.save);
+    self.saveButton.removeEventListener("click", self.confirmSave);
+    
+  }
   
 }

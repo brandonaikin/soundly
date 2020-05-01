@@ -17,7 +17,7 @@
       <div class="app-grid"></div>
       <div class="controls col-4" id="filterControls">
         <label for="filterControls">Filter</label>
-        <div id="effects" style="display:inline-flex;">
+        <div id="effects">
           <select id="filterTypeSelect">
             <option value="">None</option>
             <option>Lowpass</option>
@@ -29,22 +29,23 @@
           </select>
         </div>
         
-        </div>
+      </div>
       <div class="controls col-4">
-        <button class="play-stop-button">Load</button> 
-        <button class="new-pattern-button" style="display:none;">NEW</button>
-        <form id="saveForm" name="saveForm">
-          <input id="saveInput" required=""> <button class="save-button">Save</button>
+        <button class="play-stop-button"></button> 
+        <select id="patternSelect">
+          <option>
+            - NEW PATTERN -
+          </option>
+        </select>
+        <form id="saveForm" name="saveForm" >
+          <button class="save-button">Save</button>
+          <input id="saveInput" class="hidden" required=""> 
         </form>
         <div id="tempoBox">
           Tempo: <span id="showTempo">120</span>BPM <input id="tempo" type="range" min="30.0" max="160.0" step="1" value="120">
         </div>
         <div>
-          <select id="patternSelect">
-            <option>
-              - NEW PATTERN -
-            </option>
-          </select>
+          
         </div>
       </div>
     </div>
@@ -61,6 +62,8 @@
     </template>
     <script src="/public/js/Constants.js"></script> 
     <script src="/public/js/BeatClock.js"></script> 
+    <script src="/public/js/NoiseGenerator.js"></script> 
+    
     <script src="/public/js/Pattern.js"></script> 
     <script src="/public/js/SampleSound.js"></script> 
     <script src="/public/js/Synthesizer.js"></script> 

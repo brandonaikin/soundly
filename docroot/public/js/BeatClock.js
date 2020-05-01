@@ -2,6 +2,7 @@ class BeatClock {
   #tempo;
   #step;
   #eventDispatcher;
+  #futureTickTime;
   constructor() {
     this.#tempo = 120;
     this.#step  = 0;
@@ -9,16 +10,19 @@ class BeatClock {
     this.timerId = null;
     this.secondsPerBeat = 60 / this.#tempo;
     this.counterTimeValue = this.secondsPerBeat / 4;
-    this.futureTickTime = 0;
+    this.#futureTickTime = 0;
     BeatClock.this = this;
   }
   
   start() {
     let self = BeatClock.this;
-    let millis = self.counterTimeValue * 1000;
-    self.timerId = window.setInterval(self.tick, millis);
     self.secondsPerBeat = 60 / self.#tempo;
     self.counterTimeValue = (self.secondsPerBeat / 4);
+    let millis = self.counterTimeValue * 1000;
+
+    console.log("start at " + self.secondsPerBeat + "tick " + millis);
+    self.timerId = window.setInterval(self.tick, millis);
+    
   }
   
   stop() {
@@ -28,12 +32,14 @@ class BeatClock {
   
   tick() {
     let self = BeatClock.this;
+    console.log("TEMPO: " + self.#tempo);
     self.secondsPerBeat = 60 / self.#tempo;
     self.counterTimeValue = (self.secondsPerBeat / 4);
     let evt = new CustomEvent("tick", {
       bubbles: true,
       detail: { time:self.counterTimeValue}
     });
+    self.#futureTickTime += self.counterTimeValue;
     BeatClock.this.fireEvent(evt);
   }
   
@@ -41,6 +47,14 @@ class BeatClock {
     return this.counterTimeValue;
   }
   
+  set futureTickTime(value) {
+    if(isNaN(value)) return;
+    this.#futureTickTime = value;
+  }
+  
+  get futureTickTime() {
+    return this.#futureTickTime;
+  }
   set tempo(value) {
     this.#tempo = value;
   }
