@@ -1,15 +1,19 @@
 class SoundlyUIBridge {
-  
+  /**
+  This class will (eventually) handle all of the build and display of the UI...
+  removing the resonsibility of knowledge of the DOM from the sequencer.
+  Too smart to be a view class, but hopefully oblivious to the inner workings of the sequencer.
+  Kind of a ViewController or whatever.
+  **/
   constructor(sequencer) {
     this.sequencer = sequencer;
     this.sequencer.addEventListener("tempoChange", this.onSequencerTempoChange);
-    SoundlyUIBridge.this = this;
-    this.volumeKnobs = [];
     this.playButton = document.querySelector(".play-stop-button");
     this.saveButton = document.querySelector("button.save-button"); 
-    this.saveForm = document.querySelector("form#saveForm");
-    this.paused = true;
+    this.saveForm   = document.querySelector("form#saveForm");
+    this.paused     = true;
     document.querySelector("#filterTypeSelect").addEventListener("change", this.onFilterTypeChange);
+    SoundlyUIBridge.this = this;
     this.initialize();
   }
   
@@ -31,7 +35,7 @@ class SoundlyUIBridge {
   }
   
   onSoundsLoaded(evt) {
-    
+    //TODO
   }
   
   get currentPattern() {
@@ -72,7 +76,7 @@ class SoundlyUIBridge {
     let data = pattern.sequence;
     document.getElementById("saveInput").value = pattern.title;
     SoundlyUIBridge.this.loadSequence(pattern);
-    
+    // TODO
     SoundlyUIBridge.this.playPause();
   }
   
@@ -89,7 +93,7 @@ class SoundlyUIBridge {
         select.selectedIndex = i; 
       }
     }
-    let t   = p.tempo || this.sequencer.tempo;
+    let t = p.tempo || this.sequencer.tempo;
     let distortion = p.distortion;
     let freq = p.filterFrequency;
     this.sequencer.setTempo(t);

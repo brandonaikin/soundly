@@ -1,14 +1,16 @@
 
 const urlParams = new URLSearchParams(window.location.search);
+// TODO delegate moreee
 class Sequencer {
   #tempo;
+  #eventDispatcher;
   constructor(){
+    this.#eventDispatcher = new EventTarget();
     this.patterns = [];
     this.sounds   = [];
     this.playing  = false;
     this.audioContext     = null;
     this.currentPattern   = null;
-    this.eventDispatcher  = new EventTarget();
     this.beatClock        = new BeatClock();
     this.synth     = null;
     this.userId    = urlParams.get("id");
@@ -18,7 +20,7 @@ class Sequencer {
   initialize() {
     this.audioContext = new AudioContext();
     this.synth = new Synthesizer(Sequencer.this.audioContext);
-    this.eventDispatcher.dispatchEvent(new Event("initialized"));
+    this.#eventDispatcher.dispatchEvent(new Event("initialized"));
   }
   
   loadPatterns(){
@@ -31,7 +33,7 @@ class Sequencer {
        .then((response) => response.json())
        .then((result) => {
          self.createPatterns(result);
-         self.eventDispatcher.dispatchEvent(new Event("sequencesLoaded"));
+         self.#eventDispatcher.dispatchEvent(new Event("sequencesLoaded"));
     });
   }
   
@@ -60,7 +62,7 @@ class Sequencer {
       bubbles: true,
       detail: { tempo: this.beatClock.tempo }
     });
-    this.eventDispatcher.dispatchEvent(evt);
+    this.#eventDispatcher.dispatchEvent(evt);
     this.restart();
     
   }
@@ -79,11 +81,11 @@ class Sequencer {
        .then((response) => response.json())
        .then((result) => {
          self.createPatterns(result);
-         self.eventDispatcher.dispatchEvent(new Event("soundUrlsLoaded"));
+         self.#eventDispatcher.dispatchEvent(new Event("soundUrlsLoaded"));
     });
   }
   
-  
+  // TODO
   addSound(file, name) {
     this.sounds.push({"url":file, "name":name});
     return this;
@@ -94,7 +96,7 @@ class Sequencer {
     this.sounds.forEach(function(soundObj){
       self.loadSound(soundObj.url);
     });
-    this.eventDispatcher.dispatchEvent(new Event("soundsLoaded"));
+    this.#eventDispatcher.dispatchEvent(new Event("soundsLoaded"));
   }
   
   loadSound(url) {
@@ -118,6 +120,9 @@ class Sequencer {
     getSound.send();
   }
   
+  /*
+    Fucking play it
+  */
   play() {
     this.beatClock.addEventListener("tick", this.onClockTick);
     let self = Sequencer.this;
@@ -197,7 +202,7 @@ class Sequencer {
       return fetch(url, params)
           .then((response) => response.json())
           .then((result) => {
-            self.eventDispatcher.dispatchEvent(new Event("patternSaved"));
+            self.#eventDispatcher.dispatchEvent(new Event("patternSaved"));
             console.log('Success:', result);
        });
     }
@@ -300,20 +305,16 @@ class Sequencer {
   }
   
   addEventListener(type, listener){
-    this.eventDispatcher.addEventListener(type, listener);
+    this.#eventDispatcher.addEventListener(type, listener);
   }
   
   removeEventListener(type,listener){
-    this.eventDispatcher.removeEventListener(type, listener);
+    this.#eventDispatcher.removeEventListener(type, listener);
   }
   
-  stopAndUnloadAll() {
-    this.stop();
-    this.patterns = [];
-    this.sounds   = [];
-    this.beatClock.step     = 0;
-  }
-  
+  /*
+    Fucking stop it
+  */
   stop() {
     this.beatClock.stop();
     this.beatClock.removeEventListener("tick", this.onClockTick);
