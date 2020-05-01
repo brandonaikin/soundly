@@ -96,10 +96,13 @@ class SoundlyUIBridge {
     let t = p.tempo || this.sequencer.tempo;
     let distortion = p.distortion;
     let freq = p.filterFrequency;
+    let res  = p.resonance;
     this.sequencer.setTempo(t);
     this.frequencyKnob.setValue(freq);
+    this.resonanceKnob.setValue(res);
     this.distortionKnob.setValue(distortion);
     this.sequencer.setGlobalFrequency(null,freq);
+    this.sequencer.setGlobalResonance(null,res);
     this.sequencer.setGlobalFilterType(filter);
     this.sequencer.setGlobalDistortion(null, distortion);
     this.updateTempoLabel(t + " ");
