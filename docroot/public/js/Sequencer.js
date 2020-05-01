@@ -61,10 +61,7 @@ class Sequencer {
       detail: { tempo: this.beatClock.tempo }
     });
     this.eventDispatcher.dispatchEvent(evt);
-    if(this.audioContext !== null) {
-      this.stop();
-      this.play();
-    }
+    this.restart();
     
   }
   
@@ -72,7 +69,7 @@ class Sequencer {
     return this.beatClock.tempo;
   }
   
-  findSounds() (
+  findSounds() {
     let params = {
       method:"POST"
     };
@@ -84,7 +81,7 @@ class Sequencer {
          self.createPatterns(result);
          self.eventDispatcher.dispatchEvent(new Event("soundUrlsLoaded"));
     });
-  )
+  }
   
   
   addSound(file, name) {
@@ -127,6 +124,7 @@ class Sequencer {
     if(self.synth !== null && typeof self.synth !== "undefined"){
       self.synth.mute();
     }
+    // TODO Eliminate / encapsulate these flags
     self.playing = !self.playing;
     if(!self.playing){
       self.stop();
@@ -294,8 +292,8 @@ class Sequencer {
       Sequencer.this.currentPattern.distortion = value;
     }
   }
-  
-  setSynthVolume(knob, value) {
+
+  setSynthVolume(knob, value){
     if(Sequencer.this.synth !== null){
       Sequencer.this.synth.setVolume(value);
     }
@@ -313,7 +311,6 @@ class Sequencer {
     this.stop();
     this.patterns = [];
     this.sounds   = [];
-    this.playing  = false;
     this.beatClock.step     = 0;
   }
   
@@ -326,5 +323,11 @@ class Sequencer {
     }
   }
   
+  restart(){
+    if(this.audioContext !== null) {
+      this.stop();
+      this.play();
+    }
+  }
 }
 window.Sequencer = Sequencer;

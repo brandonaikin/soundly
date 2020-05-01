@@ -85,7 +85,7 @@ class SoundlyUIBridge {
     for (var i = 0; i < options.length; i++) {
       let option = options.item(i);
       let value  = option.value.toLowerCase();
-      if (filter.toLowerCase() === value) {
+      if (this.isDefined(filter) && filter.toLowerCase() === value) {
         select.selectedIndex = i; 
       }
     }
@@ -348,7 +348,10 @@ class SoundlyUIBridge {
     self.saveButton.innerText = "Save";
     self.saveButton.addEventListener("click", self.save);
     self.saveButton.removeEventListener("click", self.confirmSave);
-    
+  }
+  
+  isDefined(value){
+    return (value !== null && typeof value !== "undefined");
   }
   
 }

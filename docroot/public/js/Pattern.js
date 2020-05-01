@@ -6,6 +6,7 @@ class Pattern{
     this.title = "Untitled";
     this.tempo = 120;
     this.filterType = "lowpass";
+    this.samples = [];
     this.sequence = [
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
@@ -37,6 +38,11 @@ class Pattern{
       this.trackMix.push(volume);
     }
   }
+
+  hasSamples() {
+    return this.samples.length > 0;
+  }
+
   parseFromJson(json) {
     this.#json = json;
     this.title = json.title;
@@ -45,11 +51,13 @@ class Pattern{
     this.sequence = json.sequence;
     this.filterFrequency = json.filterFrequency;
     this.distortion = json.distortion;
+    this.resonance  = json.resonance;
     if(typeof json.trackMix !== "undefined") {
-    this.trackMix = json.trackMix;
+      this.trackMix = json.trackMix;
+    }
+    if(typeof json.samples !== "undefined" && Array.isArray(json.samples)){
+      this.samples = json.samples;
     }
   }
-  
-
 }
 window.Pattern = Pattern;
