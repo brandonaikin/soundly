@@ -148,7 +148,7 @@ class Synthesizer {
       .setSustain(config.sustain)
       .setRelease(config.release)
       .setDuration(config.duration)
-      .trigger();
+      .triggerA();
   }
   
 }

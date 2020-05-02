@@ -6,7 +6,10 @@ class Envelope {
     this.decay    = 1.0;
     this.sustain  = 1.0;
     this.release  = 0.0;
-    this.duration = this.duration;
+    this.attackTime   = 0.5;
+    this.decayTime   = 1.0;
+    this.sustainTime  = 1.0;
+    this.releaseTime  = 1.0;
   }
   
   trigger() {
@@ -20,6 +23,26 @@ class Envelope {
     this.paramater.cancelScheduledValues(now);
     this.paramater.setValueCurveAtTime(values, now, this.duration);
     this.paramater.linearRampToValueAtTime(originalValue, now + this.duration * 2);
+    return this;
+  }
+  
+  triggerA() {
+    let now = this.audioContext.currentTime;
+    let originalValue = this.paramater.value;
+    let time = now + this.attackTime;
+    this.paramater.cancelScheduledValues(now);
+    this.paramater.linearRampToValueAtTime(this.attack, time);
+    time += this.decayTime;
+    
+    this.paramater.linearRampToValueAtTime(this.decay, time);
+    time += this.sustainTime; 
+    
+    this.paramater.linearRampToValueAtTime(this.sustain, time);
+    time += this.releaseTime; 
+    
+    this.paramater.linearRampToValueAtTime(this.release, time);
+    
+    this.paramater.linearRampToValueAtTime(originalValue, 1);
     return this;
   }
   
@@ -40,6 +63,26 @@ class Envelope {
   
   setRelease(value) {
     this.release = this.normalizeValue(value);
+    return this;
+  }
+  
+  setAttackTime(value) {
+    this.attackTime = this.normalizeValue(value);
+    return this;
+  }
+  
+  setDecayTime(value) {
+    this.decayTime = this.normalizeValue(value);
+    return this;
+  }
+  
+  setSustainTime(value) {
+    this.sustainTime = this.normalizeValue(value);
+    return this;
+  }
+  
+  setReleaseTime(value) {
+    this.releaseTime = this.normalizeValue(value);
     return this;
   }
   
