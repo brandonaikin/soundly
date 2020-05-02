@@ -62,7 +62,7 @@
     </template>
     <script src="/public/js/Constants.js"></script> 
     <script src="/public/js/BeatClock.js"></script> 
-    <script src="/public/js/NoiseGenerator.js"></script> 
+    <script src="/public/js/Envelope.js"></script> 
     
     <script src="/public/js/Pattern.js"></script> 
     <script src="/public/js/SampleSound.js"></script> 

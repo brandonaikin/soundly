@@ -1,23 +1,40 @@
 class Synthesizer {
   #muted = false;
-  constructor(audioContext){
+  constructor(audioContext, waveforms){
     this.audioContext = audioContext;
     this.volume       = 0.5;
     this.amp          = this.audioContext.createGain();
     this.biquadFilter = this.audioContext.createBiquadFilter();
+    this.lowFreqOsc   = null;
     this.waveform     = "sawtooth";
     this.filterType   = "lowpass";
-    
-    this.resonance    = 0;
-    this.attack       = 0;
-    this.decay        = 1;
-    this.envelopeMin  = 100;
-    this.envelopeMax  = 5000;
-    this.filterFrequency = this.envelopeMax;
-    this.amp.connect(this.audioContext.destination);
+    this.lfo = 0;
+    this.resonance    = 10;
+    this.filterFrequency = 5000;
+    this.envelopeConfig = null;
     this.activeOscillators = [];
     this.oscillators = [];
+    this.started = false;
     Synthesizer.this = this;
+    if(Array.isArray(waveforms)) {
+      this.initializeOscillators(waveforms);
+    }
+    let compressor = this.audioContext.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-50, this.audioContext.currentTime);
+    compressor.knee.setValueAtTime(40, this.audioContext.currentTime);
+    compressor.ratio.setValueAtTime(12, this.audioContext.currentTime);
+    compressor.attack.setValueAtTime(0, this.audioContext.currentTime);
+    compressor.release.setValueAtTime(0.25, this.audioContext.currentTime);
+    this.amp.connect(compressor);
+    compressor.connect(this.audioContext.destination);
+  }
+  
+  initializeOscillators(waveforms) {
+    waveforms.forEach(function(wave){
+      if(["sawtooth","square","triangle","sine"].includes(wave)){
+        Synthesizer.this.createOscillator(wave);
+      }
+    });
   }
   
   get isMuted() {
@@ -26,7 +43,6 @@ class Synthesizer {
   
   setVolume(value) {
     this.volume = value * 0.01;
-    //this.amp.gain.value = value;
     return this;
   }
   
@@ -55,74 +71,86 @@ class Synthesizer {
     return this;
   }
   
+  setLfo(value) {
+    this.lfo = value;
+    if(this.lowFreqOsc != null) {
+      this.lowFreqOsc.frequency.value = this.lfo;
+    }
+    
+  }
+  setEnvelopeConfig(config) {
+    this.envelopeConfig = config;
+  }
+  
   play(note, duration = 1) {
     
     if (this.oscillators.length === 0) {
-      this.startOscillator();
+      this.createOscillator("sawtooth");
     }
-    let osc = this.oscillators[0];
-    this.amp.gain.value = this.volume;
-    osc.type = this.waveform;
-    osc.frequency.value = note;
-    this.activeOscillators.push(note);
+    for (var i = 0; i < this.oscillators.length; i++) {
+      let osc = this.oscillators[i];
+      this.amp.gain.value = this.volume;
+      osc.frequency.value = note;
+      if(this.started === false) {
+        osc.start();
+      }
+      
+    }
+    
+    this.started = true;
     
   }
   
-  startOscillator() {
+  createOscillator(waveform) {
     let osc = this.audioContext.createOscillator();
     this.amp.connect(this.audioContext.destination);
-    
-    
+    osc.type = waveform;
     osc.connect(this.biquadFilter)
        .connect(this.amp);
-    osc.start();
     this.oscillators.push(osc);
   }
   
-  playChord(oscOptions) {
-    this.stopActiveOscillators();
-    let self = this;
-    this.amp.connect(this.audioContext.destination);
-    oscOptions.forEach(function(optionSet){
-      let filter  = self.audioContext.createBiquadFilter();
-      let osc     = self.audioContext.createOscillator();
-      let tone    = optionSet.tone || 0;
-      if(tone === 0) {
-        throw new Error("Tone is required.")
-      }
-      if(self.activeOscillators.includes(tone)){
-        return;
-      }
-      filter.type = optionSet.filterType || "lowpass";
-      osc.frequency.value = optionSet.tone || 220;
-      osc.type = optionSet.waveform || "sawtooth";
-      osc.connect(self.biquadFilter)
-          .connect(self.amp);
-      osc.start();
-      self.activeOscillators.push(tone);
-    });
-  }
-    
   mute(){
     this.amp.gain.value = 0.0;
     this.#muted = true;
   }
   
   unmute() {
+    if(this.envelopeConfig !== null) {
+      this.applyEnvelope();
+    }
+    
     this.amp.gain.value = this.volume;
     this.#muted = false;
   }
   
-  stopActiveOscillators() {
-    let n = this.activeOscillators.length;
-    let i = 0;
-    while (i < n) {
-      let osc = this.activeOscillators[i];
-      osc.stop();
-      i++;
+  applyEnvelope() {
+    if(Array.isArray(this.envelopeConfig.properties)) {
+      if(this.envelopeConfig.properties.includes("filter")){
+        this.createEnvelope(this.biquadFilter.frequency, this.envelopeConfig);
+      }
+      if(this.envelopeConfig.properties.includes("amp")){
+        this.createEnvelope(this.amp.gain, this.envelopeConfig);
+      }
+      if(this.envelopeConfig.properties.includes("osc")){
+        for(var i = 0; i < this.oscillators.length;  i++) {
+          this.createEnvelope(this.oscillators[i].frequency, this.envelopeConfig);
+        }
+      }
     }
-      this.activeOscillators.splice(0);
+  
   }
+  
+  createEnvelope(param, config) {
+    new Envelope(param, this.audioContext)
+      .setAttack(config.attack)
+      .setDecay(config.decay)
+      .setSustain(config.sustain)
+      .setRelease(config.release)
+      .setDuration(config.duration)
+      .trigger();
+  }
+  
 }
 
 window.Synthesizer = Synthesizer;

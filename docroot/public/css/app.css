@@ -80,3 +80,15 @@ div#effects {
 .hidden {
   display:none;
 }
+div.inline-checkbox-group {
+  height:120px;
+}
+div#controls.tall {
+  height:600px;
+}
+div#controls div.inline-checkbox {
+  height:20px;
+}
+div#buttonSet {
+  margin-top: 60px;
+}
