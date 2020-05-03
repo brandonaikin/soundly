@@ -100,6 +100,7 @@ class BeatPopup {
   
   onAccordianClick(evt){
     let child = evt.target.querySelector("div");
+    if(child === null || typeof child === "undefined") return;
     let display = child.style.display;
     child.style.display = display === "none" ? "inline-block" : "none";
   }
