@@ -80,8 +80,18 @@ class Sequencer {
     return fetch(url, params)
        .then((response) => response.json())
        .then((result) => {
-         self.createPatterns(result);
-         self.#eventDispatcher.dispatchEvent(new Event("soundUrlsLoaded"));
+         
+         let sounds = result;
+         for(var i = 0; i < sounds.length; i++) {
+           let sound = sounds[i];
+           if(self.sounds.includes(sound)) {
+             continue;
+           }
+           if(sound.indexOf(".mp3") === -1) {
+             continue;
+           }
+           self.sounds.push({"url":"/uploads/soundly/" + self.userId + "/samples/" + sound, "name":sound});
+         }
     });
   }
   
@@ -120,9 +130,6 @@ class Sequencer {
     getSound.send();
   }
   
-  /*
-    Fucking play it
-  */
   play() {
     this.beatClock.addEventListener("tick", this.onClockTick);
     let self = Sequencer.this;
@@ -172,15 +179,20 @@ class Sequencer {
     let trax = this.currentPattern.sequence;
     for(var index in trax) {
       let beat = trax[index][beatIndex];
+      let detail = this.currentPattern.getBeatDetail(index, beatIndex);
       if(!isNaN(beat)) {
         if(beat === 1) {
           let audio = this.sounds[index].sound;
-          audio.play();
+          if(audio !== null && typeof audio !== "undefined") {
+            this.addBeatDetails(audio, detail);
+            audio.play();
+          }
         }
         else if(parseInt(index) === 4 && parseInt(beat) === 0) {
           this.synth.mute();
         }
         else if (beat > 10) {
+          this.addBeatDetails(this.synth, detail);
           this.synth.unmute();
           this.synth.play(beat);
         }
@@ -188,6 +200,15 @@ class Sequencer {
     }
   }
   
+  addBeatDetails(sound, detail) {
+    if(detail === null) return;
+    if(detail.filter && !isNaN(detail.filter)) {
+      sound.setFilterFrequency(Number(detail.filter));
+    }
+    if(detail.volume && !isNaN(detail.volume)) {
+      sound.setVolume(Number(detail.volume));
+    }
+  }
   save(title) {
     if(this.currentPattern !== null) {
       this.currentPattern.title = title;
@@ -244,7 +265,7 @@ class Sequencer {
   }
   
   setVolumeForTrack(trackIndex, volume) {
-    
+      
     if (this.sounds[trackIndex] && this.sounds[trackIndex].sound) {
       let audio = this.sounds[trackIndex].sound;
       volume *=  0.01;
@@ -260,7 +281,9 @@ class Sequencer {
   
   setGlobalFrequency(knob, value) {
     Sequencer.this.sounds.forEach(function(soundObj){
-      soundObj.sound.setFilterFrequency(value);
+      if(typeof soundObj.sound !== "undefined"){
+        soundObj.sound.setFilterFrequency(value);
+      }
     });
     Sequencer.this.currentPattern.filterFrequency = value;
     if(Sequencer.this.synth !== null){
@@ -270,7 +293,9 @@ class Sequencer {
   
   setGlobalFilterType(value) {
     Sequencer.this.sounds.forEach(function(soundObj){
-      soundObj.sound.setFilterType(value.toLowerCase());
+      if(typeof soundObj.sound !== "undefined"){
+        soundObj.sound.setFilterType(value.toLowerCase());
+      }
     });
     Sequencer.this.currentPattern.filterType = value.toLowerCase();
     if(Sequencer.this.synth !== null){
@@ -281,7 +306,9 @@ class Sequencer {
   
   setGlobalResonance(knob, value) {
     Sequencer.this.sounds.forEach(function(soundObj){
-      soundObj.sound.setFilterResonance(value);
+      if(typeof soundObj.sound !== "undefined"){
+        soundObj.sound.setFilterResonance(value);
+      }
     });
     Sequencer.this.currentPattern.resonance = value;
     if(Sequencer.this.synth !== null && typeof Sequencer.this.synth !== "undefined"){
@@ -291,7 +318,9 @@ class Sequencer {
   
   setGlobalDistortion(knob, value) {
     Sequencer.this.sounds.forEach(function(soundObj){
-      soundObj.sound.setDistortionLevel(value);
+      if(typeof soundObj.sound !== "undefined"){
+        soundObj.sound.setDistortionLevel(value);
+      }
     });
     if(Sequencer.this.synth !== null){
       Sequencer.this.currentPattern.distortion = value;
@@ -312,9 +341,14 @@ class Sequencer {
     this.#eventDispatcher.removeEventListener(type, listener);
   }
   
-  /*
-    Fucking stop it
-  */
+  onBeatDetailChange(evt) {
+    let p = evt.detail.property;
+    let v = evt.detail.value;
+    let t = evt.detail.trackIndex;
+    let b = evt.detail.beatIndex;
+    Sequencer.this.currentPattern.addBeatDetail(t, b, p, v);
+  }
+  
   stop() {
     this.beatClock.stop();
     this.beatClock.removeEventListener("tick", this.onClockTick);

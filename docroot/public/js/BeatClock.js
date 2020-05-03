@@ -20,7 +20,6 @@ class BeatClock {
     self.counterTimeValue = (self.secondsPerBeat / 4);
     let millis = self.counterTimeValue * 1000;
 
-    console.log("start at " + self.secondsPerBeat + "tick " + millis);
     self.timerId = window.setInterval(self.tick, millis);
     
   }
@@ -32,7 +31,6 @@ class BeatClock {
   
   tick() {
     let self = BeatClock.this;
-    console.log("TEMPO: " + self.#tempo);
     self.secondsPerBeat = 60 / self.#tempo;
     self.counterTimeValue = (self.secondsPerBeat / 4);
     let evt = new CustomEvent("tick", {

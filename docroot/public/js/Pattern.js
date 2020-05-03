@@ -7,11 +7,19 @@ class Pattern{
     this.tempo = 120;
     this.filterType = "lowpass";
     this.samples = [];
+    this.instruments = ["sample","sample","sample","sample","synth"];
     this.sequence = [
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], 
       [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ];
+    this.beatDetails = [
+      [{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}], 
+      [{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}], 
+      [{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}], 
+      [{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}], 
+      [{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
     ];
     this.filterFrequency = 5000;
     this.distortion = 0;
@@ -22,6 +30,28 @@ class Pattern{
     }
   }
   
+  addBeatDetail(trackIndex, beatIndex, property, value) {
+    if(trackIndex >= this.beatDetails.length) {
+      this.beatDetails.push([{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]);
+    }
+    this.beatDetails[trackIndex][beatIndex][property] = value;
+  }
+  
+  getBeatDetail(trackIndex, beatIndex) {
+    if(typeof this.beatDetails[trackIndex] !== "undefined"){
+      return this.beatDetails[trackIndex][beatIndex];
+    }
+    return null;
+  }
+  
+  setInstrument(index, instrument) {
+    if(index >= this.instruments.length) return;
+    this.instruments[index] = instrument;
+  }
+  getInstrument(index) {
+    if(index >= this.instruments.length) return;
+    return this.instruments[index];
+  }
   setTrackVolume(track, volume) {
     let divisor = 1;
     if(volume > 1) {
@@ -39,6 +69,7 @@ class Pattern{
     }
   }
 
+
   hasSamples() {
     return this.samples.length > 0;
   }
@@ -52,6 +83,9 @@ class Pattern{
     this.filterFrequency = json.filterFrequency;
     this.distortion = json.distortion;
     this.resonance  = json.resonance;
+    if(typeof json.beatDetails !== "undefined") {
+      this.beatDetails = json.beatDetails;
+    }
     if(typeof json.trackMix !== "undefined") {
       this.trackMix = json.trackMix;
     }

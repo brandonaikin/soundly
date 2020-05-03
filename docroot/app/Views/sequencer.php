@@ -50,20 +50,15 @@
       </div>
     </div>
   
-    <template id="popup">
+    <template id="beatPopup">
       <div id="popupWrapper">
-        <div class="popup-title">
-          {title}
-        </div>
-        <div class="popup-message">
-          {message}
-        </div>
+        
       </div>
     </template>
     <script src="/public/js/Constants.js"></script> 
     <script src="/public/js/BeatClock.js"></script> 
     <script src="/public/js/Envelope.js"></script> 
-    
+    <script src="/public/js/BeatPopup.js"></script> 
     <script src="/public/js/Pattern.js"></script> 
     <script src="/public/js/SampleSound.js"></script> 
     <script src="/public/js/Synthesizer.js"></script> 

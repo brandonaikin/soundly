@@ -12,13 +12,21 @@
     function onInit(evt) {
       sequencer.addEventListener("soundsLoaded", onSoundsLoaded);
       sequencer.addEventListener("sequencesLoaded", onSequencesLoaded);
-      sequencer.addSound("/public/sounds/kick.mp3", "Kick")
-        .addSound("/public/sounds/snare.mp3", "Snare")
+      sequencer.addSound("/writable/uploads/soundly/49er/samples/Swell_Kick_ss.mp3", "Kick")
+        .addSound("/writable/uploads/soundly/49er/samples/LittlePunch_Snare_ss.mp3", "Snare")
         .addSound("/public/sounds/hihat.mp3", "HiHat")
         .addSound("/public/sounds/shaker.mp3", "Shaker")
         .loadSounds();
     }
-    
+  /*"/uploads/soundly/49er/samples/Swell_Kick_ss.mp3",
+  "/uploads/soundly/49er/samples/Bounce_Tom_ss.mp3",
+  "/uploads/soundly/49er/samples/SuperLow_Kick_ss.mp3",
+  "/uploads/soundly/49er/samples/Saturated_Snare02_ss.mp3",
+  "/uploads/soundly/49er/samples/Gunge_Kick_ss.mp3",
+  "/uploads/soundly/49er/samples/LittlePunch_Snare_ss.mp3",
+  "/uploads/soundly/49er/samples/Saturated_Snare1_ss.mp3",
+  "/uploads/soundly/49er/samples/SmashHit_Snare01_ss.mp3"
+  */
     function onSoundsLoaded(){
       sequencer.loadPatterns();
     }
@@ -34,7 +42,7 @@
         freq = uiBridge.currentPattern.filterFrequency;
       }
       sequencer.setGlobalFrequency(null, freq);
-      uiBridge.addSynthTrack();
+      //uiBridge.addSynthTrack();
     }
     
 /*

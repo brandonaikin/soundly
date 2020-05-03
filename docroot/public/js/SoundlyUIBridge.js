@@ -18,13 +18,13 @@ class SoundlyUIBridge {
   }
   
   initialize() {
+    document.getElementById("saveInput").value = "Untitled";
+    document.querySelector("#tempo").addEventListener("change", this.onUITempoChange);
     let p = this.sequencer.createEmptyPattern();
     this.frequencyKnob  = this.addFrequencyKnob();
     this.distortionKnob = this.addDistortionKnob();
     this.resonanceKnob  = this.addResonanceKnob();
     this.loadSequence(p);
-    document.getElementById("saveInput").value = "Untitled";
-    document.querySelector("#tempo").addEventListener("change", this.onUITempoChange);
     this.playButton.innerText = "\u25B6";
     this.playButton.addEventListener("click",function(evt){
       SoundlyUIBridge.this.playPause();
@@ -32,10 +32,13 @@ class SoundlyUIBridge {
     this.saveForm.addEventListener("submit", this.save);
     this.sequencer.addEventListener("soundsLoaded", this.onSoundsLoaded);
     this.sequencer.loadSounds();
+    this.sequencer.addEventListener("soundUrlsLoaded", this.onUserSoundsLoaded);
+    this.sequencer.findSounds();
   }
   
-  onSoundsLoaded(evt) {
-    //TODO
+  onUserSoundsLoaded(evt) {
+    console.log(evt);
+    let sounds = evt.detail;
   }
   
   get currentPattern() {
@@ -93,6 +96,10 @@ class SoundlyUIBridge {
         select.selectedIndex = i; 
       }
     }
+    this.buildSequenceForPattern(p,filter);
+  }
+  
+  buildSequenceForPattern(p, filter) {
     let t = p.tempo || this.sequencer.tempo;
     let distortion = p.distortion;
     let freq = p.filterFrequency;
@@ -106,11 +113,13 @@ class SoundlyUIBridge {
     this.sequencer.setGlobalFilterType(filter);
     this.sequencer.setGlobalDistortion(null, distortion);
     this.updateTempoLabel(t + " ");
+    this.addEditTrackButtons();
   }
   
   loadTracks(data) {
     document.querySelector(".app-grid").innerHTML = "";
     let mix = this.sequencer.getCurrentPattern().trackMix;
+    let self = SoundlyUIBridge.this;
     if(typeof mix === "undefined") {
       mix = [0.5,0.5,0.5,0.5];
     }
@@ -119,62 +128,32 @@ class SoundlyUIBridge {
       if(!isNaN(mix[i])) {
         vol = Math.floor(parseFloat(mix[i]) * 100); 
       }
-      
       let track = this.buildTrack(i + 1, vol);
-      for (var j = 0; j < data[i].length; j++) {
-        let cell = data[i][j];
-        let tile = this.buildTile(track, (j + 1), cell);
-      }
-      
+      this.buildTilesForTrack(track, i, data);
       this.sequencer.setVolumeForTrack(i, vol);
     }
   }
-  
-  addSynthTrack() {
-    let trackDiv  = this.buildTrack(5);
-    let track = {};
-    track.sequence = [];
-    let i = 0;
-    while(i < 16) {
-      let tile = this.buildTile(trackDiv, (i + 1), false);
 
-      tile.setAttribute("data-tone", 0);
-      
-      tile.addEventListener("click", function(evt){
-        
-        let t = evt.target.dataset.trackIndex;
-        let b = evt.target.dataset.beatIndex;
-        let value = evt.target.value;
-        let selected = true;
-        if(typeof evt.target.dataset.selected === "undefined") {
-          evt.target.setAttribute("data-selected", true);
-        }
-        else {
-          selected = evt.target.dataset.selected;
-          evt.target.setAttribute("data-selected", !selected);
-        }
-        let tone = parseFloat(evt.target.dataset.tone) || 0;
-        SoundlyUIBridge.this.sequencer.updateCurrentPattern(t, b, tone, selected);
-      });
-      let toneSelectDiv = this.buildTonesSelect();
-      let toneSelect    = toneSelectDiv.querySelector("select");
-      toneSelect.setAttribute("data-track-index", trackDiv.dataset.trackIndex);
-      toneSelect.setAttribute("data-beat-index", i);
-      toneSelect.addEventListener("change", function(evt){
-        let t = evt.target;
-        let s = parseInt(t.dataset.beatIndex) +1;
-        let tile = trackDiv.querySelector("div.step-" + s);
-        tile.setAttribute("data-tone", parseFloat(t.value));
-        if(tile.dataset.selected) {
-          SoundlyUIBridge.this.sequencer.updateCurrentPattern(tile.dataset.trackIndex, tile.dataset.beatIndex, parseFloat(t.value), true);
-        }
-      });
-      trackDiv.appendChild(toneSelectDiv);
-      track.index = trackDiv.dataset.trackIndex;
-      track.sequence.push(0);
-      i++;
+  buildTilesForTrack(track, trackIndex, data) {
+    for (var i = 0; i < data[trackIndex].length; i++) {
+      const cell = data[trackIndex][i];
+      let tile = this.buildTile(track, (i + 1), cell);
+      tile.addEventListener("dblclick", function(evt){
+        self.showBeatPopup(evt);
+      })
     }
-    this.sequencer.addTrackToPattern(track);
+  }
+  
+  addEditTrackButtons() {
+    let appGrid = document.querySelector(".app-grid");
+    let addDrumBtn = document.createElement("button");
+    console.log("addEditTrackButtons")
+  }
+  
+  addTrack() {
+    let numTracks = document.querySelector(".app-grid").children.length;
+    let trackDiv  = this.buildTrack(numTracks);
+    
   }
   
   buildTrack(trackNumber, volume = 50) {
@@ -238,12 +217,6 @@ class SoundlyUIBridge {
     return knob;
   }
 
-  addReverbKnob() {
-    let knob = this.createEffectKnob(0, 50, "Reverb");
-    knob.addListener(this.sequencer.setGlobalReverb);
-    return knob;
-  }
-  
   createEffectKnob(min, max, label = "", initial = null) {
     let knob = pureknob.createKnob(60, 60);
     let knobNode = knob.node();
@@ -277,8 +250,14 @@ class SoundlyUIBridge {
       .setVolumeForTrack(knob.node().dataset.trackIndex, value);
   }
   
-  buildTonesSelect() {
+  buildTonesSelectContainer() {
     let div = document.createElement("div");
+    let sel = this.buildTonesSelect();
+    div.appendChild(sel);
+    return div;
+  }
+  
+  buildTonesSelect(){
     let sel = document.createElement("select");
     let option = document.createElement("option");
     let label  = document.createTextNode("Note");
@@ -292,10 +271,8 @@ class SoundlyUIBridge {
       option.setAttribute("value", obj.frequency);
       sel.appendChild(option);
     }
-    div.appendChild(sel);
-    return div;
+    return sel;
   }
-  
   onTilePress(evt) {
     let cList = evt.target.classList;
     let value = 0;
@@ -357,8 +334,20 @@ class SoundlyUIBridge {
     self.saveButton.removeEventListener("click", self.confirmSave);
   }
   
+  showBeatPopup(evt) {
+    let popup = new BeatPopup(evt);
+    popup.id = "cellPopup";
+    popup.addEventListener("beatValueChange", this.sequencer.onBeatDetailChange);
+    let inst = this.sequencer.currentPattern.getInstrument(evt.target.dataset.trackIndex);
+    if(inst === "synth") {
+      popup.addToneSelect(this.buildTonesSelect());
+    }
+    popup.render();
+  }
+  
   isDefined(value){
     return (value !== null && typeof value !== "undefined");
   }
+ 
   
 }
