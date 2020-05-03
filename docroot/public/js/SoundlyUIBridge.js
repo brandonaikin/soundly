@@ -135,6 +135,7 @@ class SoundlyUIBridge {
   }
 
   buildTilesForTrack(track, trackIndex, data) {
+    let self = this;
     for (var i = 0; i < data[trackIndex].length; i++) {
       const cell = data[trackIndex][i];
       let tile = this.buildTile(track, (i + 1), cell);
